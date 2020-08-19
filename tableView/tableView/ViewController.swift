@@ -16,7 +16,7 @@ struct Fruit {
 class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource {
     
     @IBOutlet private var tableView: UITableView!
-    var fruitItemIndex = Int()
+    private var fruitItemRow:Int?
     //fruitItemsを初期化
     private var fruitItems: [Fruit] = [
         Fruit(name:"りんご", isChecked: false),
@@ -33,11 +33,7 @@ class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource
         
     }
     
-    func numberOfSections(in tableView: UITableView) -> Int {
-        1
-    }
-    
-    
+  
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         self.fruitItems.count
     }
@@ -47,7 +43,6 @@ class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath) as! TableViewCell
         
         let fruitItem = self.fruitItems[indexPath.row]
-        cell.cellImage.image = nil
         
         if fruitItem.isChecked {
             cell.cellImage.image = UIImage(named: "checkmark")
@@ -61,13 +56,12 @@ class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let check = fruitItems[indexPath.row].isChecked
-        fruitItems[indexPath.row].isChecked = !check
-        tableView.reloadData()
+        fruitItems[indexPath.row].isChecked.toggle()
+         tableView.reloadRows(at: [indexPath], with: .automatic)
     }
     
     func tableView(_ tableView: UITableView, accessoryButtonTappedForRowWith indexPath: IndexPath) {
-        fruitItemIndex = indexPath.row
+        fruitItemRow = indexPath.row
         performSegue(withIdentifier: "EditSegue", sender: indexPath)
     }
     
@@ -79,6 +73,7 @@ class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        guard let fruitItemRow = fruitItemRow else { return }
         let nav = segue.destination as? UINavigationController
         if let add = nav?.topViewController as? AddViewController{
             
@@ -87,14 +82,10 @@ class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource
                 add.mode = AddViewController.Mode.add
             case "EditSegue":
                 add.mode = AddViewController.Mode.edit
-                if let indexPath = sender as? IndexPath{
-                    let item = self.fruitItems[indexPath.row]
-                    add.fruitName = item.name 
-                }
+                add.fruitName = fruitItems[fruitItemRow].name
             default:
                 break
             }
-            add.fruitName = self.fruitItems[fruitItemIndex].name
         }
     }
     
@@ -111,9 +102,10 @@ class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource
     
     @IBAction func exitSaveEditSegue(segue:UIStoryboardSegue){
         if let addVC = segue.source as? AddViewController{
-            let indexPath = fruitItemIndex
-            fruitItems[indexPath].name = addVC.addTextField.text!
-            tableView.reloadData()
+            guard let fruitItemRow = fruitItemRow else { return }
+            fruitItems[fruitItemRow].name = addVC.addTextField.text ?? ""
+            let indexPath = IndexPath(item: fruitItemRow, section: 0)
+            tableView.reloadRows(at: [indexPath], with: .automatic)
         }
     }
 }
