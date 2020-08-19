@@ -24,9 +24,7 @@ class AddViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        if addTextField.text == ""{
-            saveButton.isEnabled = false
-        }
+        updateSaveButton()
         
         if mode == .edit{
             addTextField.text = fruitName
@@ -40,6 +38,9 @@ class AddViewController: UIViewController {
     }
     //textFieldが空あったらsaveボタンを押せなくする
     @IBAction func textFieldCheck(_ sender: Any) {
+        updateSaveButton()
+    }
+    private func updateSaveButton() {
         if addTextField.text ?? "" == ""{
             saveButton.isEnabled = false
         }else{
